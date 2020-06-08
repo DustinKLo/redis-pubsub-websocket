@@ -37,18 +37,18 @@ func handleWSConns(w http.ResponseWriter, r *http.Request) {
 func broadcastMsg(ch chan string) { // process data from redis pub sub
 	for {
 		msg := <-ch
-		log.Println("websocket clients:", clients)
+		// log.Println("websocket clients:", clients)
 
-		go func() { // not sure if i should wrap this in a separate go routine
-			// send it out to every client that is currently connected
-			for client := range clients {
-				err := client.WriteMessage(websocket.TextMessage, []byte(msg))
-				if err != nil {
-					client.Close()
-					delete(clients, client)
-				}
+		// go func() { // not sure if i should wrap this in a separate go routine
+		// send it out to every client that is currently connected
+		for client := range clients {
+			err := client.WriteMessage(websocket.TextMessage, []byte(msg))
+			if err != nil {
+				client.Close()
+				delete(clients, client)
 			}
-		}()
+		}
+		// }()
 	}
 }
 
@@ -57,10 +57,10 @@ func subClient(psc redis.PubSubConn) {
 		defer psc.Close()
 		switch v := psc.Receive().(type) {
 		case redis.Message:
-			log.Printf("[%s] %s\n", v.Channel, v.Data)
+			// log.Printf("[%s] %s\n", v.Channel, v.Data)
 			msgCh <- string(v.Data) // maybe store it as bytes
 		case redis.Subscription:
-			log.Printf("Subscribed to redis pub sub channel %s: %s %d\n", v.Channel, v.Kind, v.Count)
+			// log.Printf("Subscribed to redis pub sub channel %s: %s %d\n", v.Channel, v.Kind, v.Count)
 		case error:
 			log.Printf("redis pubsub receive err: %v\n", v)
 			panic("Redis Sub connection broke")
