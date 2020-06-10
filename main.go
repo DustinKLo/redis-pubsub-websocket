@@ -79,8 +79,6 @@ func redisConn(host string) redis.Conn {
 }
 
 func main() {
-	http.HandleFunc("/ws", handleWSConns)
-
 	pubsubChan := "test"
 	c := redisConn("127.0.0.1:6379")
 	psc := redis.PubSubConn{Conn: c}
@@ -90,6 +88,7 @@ func main() {
 	go broadcastMsg(msgCh) // process data from redis pub sub
 
 	log.Println("http server started on :8000")
+	http.HandleFunc("/ws", handleWSConns)
 	err := http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatal("ListAndServe: ", err)
