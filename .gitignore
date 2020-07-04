@@ -1,4 +1,3 @@
-  
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -182,3 +181,5 @@ Temporary Items
 .apdisk
 
 dump.rdb
+
+redis-pubsub-websocket
