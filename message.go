@@ -7,7 +7,7 @@ type Message struct {
 	message string
 }
 
-func broadcastMsg(h *Hub, ch chan *Message) { // process data from redis pub sub
+func broadcast(h *Hub, ch chan *Message) { // process data from redis pub sub
 	for {
 		msg := <-ch
 		room := msg.room

@@ -42,7 +42,7 @@ func main() {
 	hub := createHub()
 	go hub.run()
 	go subClient(psc, msgCh)
-	go broadcastMsg(hub, msgCh) // process data from redis pub sub
+	go broadcast(hub, msgCh) // process data from redis pub sub
 
 	r := mux.NewRouter()
 	r.HandleFunc("/ws/{rooms}", func(w http.ResponseWriter, r *http.Request) {
