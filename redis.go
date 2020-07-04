@@ -6,6 +6,14 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
+func redisConn(host string) redis.Conn {
+	c, err := redis.Dial("tcp", host)
+	if err != nil {
+		panic(err)
+	}
+	return c
+}
+
 func subClient(psc redis.PubSubConn, ch chan Message) {
 	for {
 		defer psc.Close()
@@ -21,12 +29,4 @@ func subClient(psc redis.PubSubConn, ch chan Message) {
 			log.Println("something else happened")
 		}
 	}
-}
-
-func redisConn(host string) redis.Conn {
-	c, err := redis.Dial("tcp", host)
-	if err != nil {
-		panic(err)
-	}
-	return c
 }

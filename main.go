@@ -44,12 +44,12 @@ func main() {
 	go subClient(psc, msgCh)
 	go broadcastMsg(hub, msgCh) // process data from redis pub sub
 
-	log.Println("http server started on :8000") // starting server
 	r := mux.NewRouter()
 	r.HandleFunc("/ws/{rooms}", func(w http.ResponseWriter, r *http.Request) {
 		handleWSConns(hub, w, r)
 	})
 
+	log.Println("http server started on :8000") // starting server
 	err := http.ListenAndServe(":8000", r)
 	if err != nil {
 		log.Fatal("ListAndServe: ", err)

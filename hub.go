@@ -37,7 +37,7 @@ func (h *Hub) run() {
 				h.rooms[room][client] = true
 			}
 		case client := <-h.unregister:
-			log.Println("un-register client: ", client)
+			log.Println("un-registered client: ", client)
 			for _, room := range client.rooms {
 				delete(h.rooms[room], client)
 				if len(h.rooms[room]) == 0 {
