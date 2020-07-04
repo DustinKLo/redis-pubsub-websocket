@@ -37,7 +37,7 @@ func main() {
 	psc := redis.PubSubConn{Conn: c}
 	psc.PSubscribe("*")
 
-	msgCh := make(chan Message) // REDIS PUB SUB CHHANNEL
+	msgCh := make(chan *Message) // REDIS PUB SUB CHHANNEL
 
 	hub := createHub()
 	go hub.run()

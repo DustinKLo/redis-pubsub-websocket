@@ -14,12 +14,12 @@ func redisConn(host string) redis.Conn {
 	return c
 }
 
-func subClient(psc redis.PubSubConn, ch chan Message) {
+func subClient(psc redis.PubSubConn, ch chan *Message) {
 	for {
 		defer psc.Close()
 		switch v := psc.Receive().(type) {
 		case redis.Message:
-			ch <- Message{v.Channel, string(v.Data)}
+			ch <- &Message{v.Channel, string(v.Data)}
 		case redis.Subscription:
 			// log.Printf("Subscribed to redis pub sub channel %s: %s %d\n", v.Channel, v.Kind, v.Count)
 		case error:
