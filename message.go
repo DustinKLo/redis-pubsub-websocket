@@ -15,7 +15,6 @@ func broadcastMsg(h *Hub, ch chan *Message) { // process data from redis pub sub
 		for client := range h.rooms[room] {
 			err := client.ws.WriteMessage(websocket.TextMessage, []byte(msg.message))
 			if err != nil {
-				client.ws.Close()
 				h.unregister <- client
 			}
 		}
