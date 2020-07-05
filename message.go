@@ -2,6 +2,7 @@ package main
 
 import "github.com/gorilla/websocket"
 
+// Message is ...
 type Message struct {
 	room    string
 	message string

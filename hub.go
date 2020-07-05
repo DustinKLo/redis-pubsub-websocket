@@ -6,11 +6,13 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Client is ...
 type Client struct {
 	ws    *websocket.Conn
 	rooms []string
 }
 
+// Hub is ...
 type Hub struct {
 	register   chan *Client
 	unregister chan *Client
