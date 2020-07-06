@@ -14,7 +14,7 @@ func redisConn(host string) redis.Conn {
 	return c
 }
 
-func subClient(psc redis.PubSubConn, ch chan *Message) {
+func subClient(psc *redis.PubSubConn, ch chan *Message) {
 	for {
 		defer psc.Close()
 		switch v := psc.Receive().(type) {
