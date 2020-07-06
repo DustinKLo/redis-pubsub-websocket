@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
@@ -32,14 +31,14 @@ func handleWSConns(h *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// var msgCh = make(chan *Message) // REDIS PUB SUB CHHANNEL
+
 func main() {
-	c := redisConn("127.0.0.1:6379")
-	psc := redis.PubSubConn{Conn: c}
 	msgCh := make(chan *Message) // REDIS PUB SUB CHHANNEL
+	redisHub := createRedisHub("127.0.0.1:6379")
 
 	hub := createHub()
-	go hub.run(&psc)
-	go subClient(&psc, msgCh)
+	go hub.run(redisHub, msgCh)
 	go broadcast(hub, msgCh) // process data from redis pub sub
 
 	r := mux.NewRouter()

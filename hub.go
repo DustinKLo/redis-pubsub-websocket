@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/websocket"
 )
 
@@ -28,7 +27,7 @@ func createHub() *Hub {
 	}
 }
 
-func (h *Hub) run(psc *redis.PubSubConn) {
+func (h *Hub) run(rHub *RedisHub, ch chan *Message) {
 	for {
 		select {
 		case client := <-h.register:
@@ -36,8 +35,7 @@ func (h *Hub) run(psc *redis.PubSubConn) {
 			for _, room := range client.rooms {
 				if h.rooms[room] == nil {
 					h.rooms[room] = make(map[*Client]bool)
-					log.Println("Subscribing to room", room)
-					psc.Subscribe(room)
+					go rHub.subClient(room, ch)
 				}
 				h.rooms[room][client] = true
 			}
@@ -47,8 +45,7 @@ func (h *Hub) run(psc *redis.PubSubConn) {
 				delete(h.rooms[room], client)
 				if len(h.rooms[room]) == 0 {
 					delete(h.rooms, room)
-					log.Println("Un-Subscribing to room", room)
-					psc.Unsubscribe(room)
+					rHub.channels[room].Unsubscribe()
 				}
 			}
 			client.ws.Close()
