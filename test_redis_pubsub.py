@@ -8,7 +8,7 @@ import random
 # connect with redis server as Alice
 r = redis.Redis(host='localhost', port=6379, db=0)
 
-lim = 20000
+lim = 10000
 
 start = time.time()
 
@@ -19,7 +19,6 @@ for i in range(lim):
   if i % 100 == 0:
     print(i)
   d = {
-    'counter': i,
     'id': str(uuid.uuid4()),
     'timestamp': datetime.datetime.now().isoformat(),
     'room': room
