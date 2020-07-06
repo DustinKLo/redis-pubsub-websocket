@@ -24,7 +24,7 @@ for i in range(lim):
     'timestamp': datetime.datetime.now().isoformat(),
     'room': room
   }
-  time.sleep(random.uniform(0, 0.0001))
+  time.sleep(random.uniform(0, 0.0005))
   r.publish(room, json.dumps(d))
 
 print(time.time() - start, "seconds")

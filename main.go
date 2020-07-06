@@ -35,13 +35,11 @@ func handleWSConns(h *Hub, w http.ResponseWriter, r *http.Request) {
 func main() {
 	c := redisConn("127.0.0.1:6379")
 	psc := redis.PubSubConn{Conn: c}
-	psc.PSubscribe("*")
-
 	msgCh := make(chan *Message) // REDIS PUB SUB CHHANNEL
 
 	hub := createHub()
-	go hub.run()
-	go subClient(psc, msgCh)
+	go hub.run(&psc)
+	go subClient(&psc, msgCh)
 	go broadcast(hub, msgCh) // process data from redis pub sub
 
 	r := mux.NewRouter()
