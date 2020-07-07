@@ -35,9 +35,9 @@ func handleWSConns(h *Hub, w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	msgCh := make(chan *Message) // REDIS PUB SUB CHHANNEL
-	redisHub := createRedisHub("127.0.0.1:6379")
+	redisHub := newRedisHub("127.0.0.1:6379")
 
-	hub := createHub()
+	hub := newHub()
 	go hub.run(redisHub, msgCh)
 	go broadcast(hub, msgCh) // process data from redis pub sub
 

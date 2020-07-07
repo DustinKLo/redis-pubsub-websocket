@@ -19,12 +19,12 @@ for i in range(lim):
   if i % 100 == 0:
     print(i)
   d = {
-    # 'counter': i,
+    'counter': i,
     'id': str(uuid.uuid4()),
     'timestamp': datetime.datetime.now().isoformat(),
     'room': room
   }
-  # time.sleep(random.uniform(0, 0.002))
+  # time.sleep(random.uniform(0, 0.0035))
   r.publish(room, json.dumps(d))
 
 print(time.time() - start, "seconds")

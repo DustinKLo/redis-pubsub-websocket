@@ -21,7 +21,7 @@ type Hub struct {
 	mtx        sync.Mutex
 }
 
-func createHub() *Hub {
+func newHub() *Hub {
 	return &Hub{
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
@@ -53,7 +53,7 @@ func (h *Hub) run(rHub *RedisHub, ch chan *Message) {
 					delete(h.rooms, room)
 					rHub.channels[room].Unsubscribe()
 				}
-				h.mtx.Lock()
+				h.mtx.Unlock()
 			}
 			client.ws.Close()
 		}

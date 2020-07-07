@@ -15,7 +15,7 @@ type RedisHub struct {
 	mtx sync.Mutex
 }
 
-func createRedisHub(host string) *RedisHub {
+func newRedisHub(host string) *RedisHub {
 	pool := &redis.Pool{
 		IdleTimeout: 0,
 		Dial: func() (redis.Conn, error) {
@@ -50,6 +50,7 @@ func (r *RedisHub) subClient(channel string, ch chan *Message) {
 		}()
 		switch v := psc.Receive().(type) {
 		case redis.Message:
+			log.Println(string(v.Data))
 			ch <- &Message{v.Channel, string(v.Data)}
 		case redis.Subscription:
 			// log.Printf("Subscribed to redis pub sub channel %s: %s %d\n", v.Channel, v.Kind, v.Count)
