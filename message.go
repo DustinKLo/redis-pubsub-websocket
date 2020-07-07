@@ -2,13 +2,12 @@ package main
 
 import "github.com/gorilla/websocket"
 
-// Message is ...
 type Message struct {
 	room    string
 	message string
 }
 
-func broadcast(h *Hub, ch chan *Message) { // process data from redis pub sub
+func broadcastMsg(h *Hub, ch chan *Message) { // process data from redis pub sub
 	for {
 		msg := <-ch
 		room := msg.room
@@ -16,6 +15,7 @@ func broadcast(h *Hub, ch chan *Message) { // process data from redis pub sub
 		for client := range h.rooms[room] {
 			err := client.ws.WriteMessage(websocket.TextMessage, []byte(msg.message))
 			if err != nil {
+				client.ws.Close()
 				h.unregister <- client
 			}
 		}
