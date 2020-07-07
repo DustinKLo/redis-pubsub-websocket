@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -17,6 +18,7 @@ type Hub struct {
 	register   chan *Client
 	unregister chan *Client
 	rooms      map[string]map[*Client]bool
+	mtx        sync.Mutex
 }
 
 func createHub() *Hub {
@@ -24,6 +26,7 @@ func createHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		rooms:      make(map[string]map[*Client]bool),
+		mtx:        sync.Mutex{},
 	}
 }
 
@@ -33,20 +36,24 @@ func (h *Hub) run(rHub *RedisHub, ch chan *Message) {
 		case client := <-h.register:
 			log.Println("registered client: ", client)
 			for _, room := range client.rooms {
+				h.mtx.Lock()
 				if h.rooms[room] == nil {
 					h.rooms[room] = make(map[*Client]bool)
 					go rHub.subClient(room, ch)
 				}
 				h.rooms[room][client] = true
+				h.mtx.Unlock()
 			}
 		case client := <-h.unregister:
 			log.Println("un-registered client: ", client)
 			for _, room := range client.rooms {
+				h.mtx.Lock()
 				delete(h.rooms[room], client)
 				if len(h.rooms[room]) == 0 {
 					delete(h.rooms, room)
 					rHub.channels[room].Unsubscribe()
 				}
+				h.mtx.Lock()
 			}
 			client.ws.Close()
 		}
