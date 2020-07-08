@@ -35,26 +35,26 @@ func (h *Hub) run(rHub *RedisHub, ch chan *Message) {
 		select {
 		case client := <-h.register:
 			log.Println("registered client: ", client)
+			h.mtx.Lock()
 			for _, room := range client.rooms {
-				h.mtx.Lock()
 				if h.rooms[room] == nil {
 					h.rooms[room] = make(map[*Client]bool)
 					go rHub.subClient(room, ch)
 				}
 				h.rooms[room][client] = true
-				h.mtx.Unlock()
 			}
+			h.mtx.Unlock()
 		case client := <-h.unregister:
 			log.Println("un-registered client: ", client)
+			h.mtx.Lock()
 			for _, room := range client.rooms {
-				h.mtx.Lock()
 				delete(h.rooms[room], client)
 				if len(h.rooms[room]) == 0 {
 					delete(h.rooms, room)
 					rHub.channels[room].Unsubscribe()
 				}
-				h.mtx.Unlock()
 			}
+			h.mtx.Unlock()
 			client.ws.Close()
 		}
 	}
