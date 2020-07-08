@@ -39,6 +39,7 @@ func (r *RedisHub) subClient(channel string, ch chan *Message) {
 	pool := r.pool.Get()
 	psc := redis.PubSubConn{Conn: pool}
 	psc.Subscribe(channel)
+
 	r.mtx.Lock()
 	r.channels[channel] = &psc
 	r.mtx.Unlock()
