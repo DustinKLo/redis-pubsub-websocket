@@ -51,12 +51,9 @@ func (r *RedisHub) subClient(channel string, ch chan *Message) {
 		}()
 		switch v := psc.Receive().(type) {
 		case redis.Message:
-			log.Println(string(v.Data))
-			ch <- &Message{v.Channel, string(v.Data)}
+			ch <- &Message{v.Channel, v.Data}
 		case redis.Subscription:
-			// log.Printf("Subscribed to redis pub sub channel %s: %s %d\n", v.Channel, v.Kind, v.Count)
 			// https://godoc.org/github.com/garyburd/redigo/redis#Subscription
-			// need to check if it is type unsubscribe and end goroutine
 			log.Println(v)
 			if v.Kind == "unsubscribe" || v.Kind == "punsubscribe" {
 				r.mtx.Lock()

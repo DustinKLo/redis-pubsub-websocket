@@ -31,10 +31,11 @@ func newHub() *Hub {
 }
 
 func (h *Hub) run(rHub *RedisHub, ch chan *Message) {
+	count := 0
 	for {
 		select {
 		case client := <-h.register:
-			log.Println("registered client: ", client)
+			// log.Println("registered client: ", client)
 			h.mtx.Lock()
 			for _, room := range client.rooms {
 				if h.rooms[room] == nil {
@@ -44,8 +45,9 @@ func (h *Hub) run(rHub *RedisHub, ch chan *Message) {
 				h.rooms[room][client] = true
 			}
 			h.mtx.Unlock()
+			count++
 		case client := <-h.unregister:
-			log.Println("un-registered client: ", client)
+			// log.Println("un-registered client: ", client)
 			h.mtx.Lock()
 			for _, room := range client.rooms {
 				delete(h.rooms[room], client)
@@ -56,6 +58,8 @@ func (h *Hub) run(rHub *RedisHub, ch chan *Message) {
 			}
 			h.mtx.Unlock()
 			client.ws.Close()
+			count--
 		}
+		log.Println(count, "clients registered")
 	}
 }

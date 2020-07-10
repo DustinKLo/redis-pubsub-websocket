@@ -9,8 +9,9 @@ import (
 
 // Message is ...
 type Message struct {
-	room    string
-	message string
+	room string
+	// message string
+	message []byte
 }
 
 func broadcast(h *Hub, ch chan *Message) { // process data from redis pub sub
