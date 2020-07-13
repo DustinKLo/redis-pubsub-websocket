@@ -22,20 +22,24 @@ func handleWSConns(h *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	rooms := strings.Split(vars["rooms"], ",")
-	wsClient := &Client{ws, rooms}
-	h.register <- wsClient
+	client := &Client{ws, rooms}
+	h.register <- client
 
-	_, _, readErr := ws.ReadMessage() // detecting when client closes
-	if readErr != nil {
-		h.unregister <- wsClient
+	_, _, rErr := ws.ReadMessage() // detecting when client closes
+	if rErr != nil {
+		h.unregister <- client
+		ws.Close()
 	}
 }
 
-// var msgCh = make(chan *Message) // REDIS PUB SUB CHHANNEL
-
 func main() {
-	msgCh := make(chan *Message) // REDIS PUB SUB CHHANNEL
-	redisHub := newRedisHub("127.0.0.1:6379")
+	msgCh := make(chan *Message) // go channel to hold all messages to broadcast
+
+	redisPool := newRedisPool("redis://127.0.0.1:6379")
+	redisConn := redisPool.Get()
+	redisHub := newRedisHub(&redisConn)
+	go redisHub.subscribeHandler()
+	go redisHub.subClient(msgCh)
 
 	hub := newHub()
 	go hub.run(redisHub, msgCh)

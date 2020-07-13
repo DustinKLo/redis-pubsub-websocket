@@ -30,35 +30,32 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) run(rHub *RedisHub, ch chan *Message) {
+func (h *Hub) run(r *RedisHub, ch chan *Message) {
 	count := 0
 	for {
 		select {
 		case client := <-h.register:
-			// log.Println("registered client: ", client)
 			h.mtx.Lock()
 			for _, room := range client.rooms {
 				if h.rooms[room] == nil {
 					h.rooms[room] = make(map[*Client]bool)
-					go rHub.subClient(room, ch)
+					r.subscribe <- room
 				}
 				h.rooms[room][client] = true
 			}
-			h.mtx.Unlock()
 			count++
+			h.mtx.Unlock()
 		case client := <-h.unregister:
-			// log.Println("un-registered client: ", client)
 			h.mtx.Lock()
 			for _, room := range client.rooms {
 				delete(h.rooms[room], client)
-				if len(h.rooms[room]) == 0 {
+				if h.rooms[room] != nil && len(h.rooms[room]) == 0 {
 					delete(h.rooms, room)
-					rHub.channels[room].Unsubscribe()
 				}
 			}
+			count--
 			h.mtx.Unlock()
 			client.ws.Close()
-			count--
 		}
 		log.Println(count, "clients registered")
 	}
