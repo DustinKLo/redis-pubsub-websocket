@@ -15,21 +15,16 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func handleWSConns(h *Hub, w http.ResponseWriter, r *http.Request) {
+func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	rooms := strings.Split(vars["rooms"], ",")
-	client := &Client{ws, rooms}
-	h.register <- client
-
-	_, _, rErr := ws.ReadMessage() // detecting when client closes
-	if rErr != nil {
-		h.unregister <- client
-		ws.Close()
-	}
+	client := newClient(ws, h, rooms)
+	go client.readPump()
+	go client.writePump()
 }
 
 func main() {
@@ -47,7 +42,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/ws/{rooms}", func(w http.ResponseWriter, r *http.Request) {
-		handleWSConns(hub, w, r)
+		handleWS(hub, w, r)
 	})
 
 	log.Println("http server started on :8000") // starting server

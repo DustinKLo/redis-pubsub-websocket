@@ -3,14 +3,69 @@ package main
 import (
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
+// var writeDeadline = time.Now().Add(time.Millisecond * 150)
+var writeDeadline = time.Now().Add(time.Second * 10)
+
 // Client is ...
 type Client struct {
-	ws    *websocket.Conn
+	conn  *websocket.Conn
+	hub   *Hub
 	rooms []string
+	send  chan []byte
+}
+
+func newClient(conn *websocket.Conn, h *Hub, rooms []string) *Client {
+	return &Client{
+		conn:  conn,
+		hub:   h,
+		rooms: rooms,
+		send:  make(chan []byte),
+	}
+}
+
+func (c *Client) writePump() {
+	// writing messages to the websocket client
+	for {
+		select {
+		case msg, ok := <-c.send:
+			if !ok {
+				// The hub closed the channel.
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			// log.Println(string(msg))
+			// c.conn.SetWriteDeadline(writeDeadline)
+			err := c.conn.WriteMessage(websocket.TextMessage, []byte(msg))
+			if err != nil {
+				log.Println(err)
+			}
+			// w, err := c.conn.NextWriter(websocket.TextMessage)
+			// if err != nil {
+			// 	log.Println(err)
+			// }
+			// w.Write(msg)
+		}
+	}
+}
+
+func (c *Client) readPump() {
+	defer func() {
+		c.conn.Close()
+		close(c.send)
+	}()
+
+	c.hub.register <- c
+
+	_, _, rErr := c.conn.ReadMessage() // detecting when client closes
+	if rErr != nil {
+		c.hub.unregister <- c
+		return
+	}
 }
 
 // Hub is ...
@@ -51,11 +106,12 @@ func (h *Hub) run(r *RedisHub, ch chan *Message) {
 				delete(h.rooms[room], client)
 				if h.rooms[room] != nil && len(h.rooms[room]) == 0 {
 					delete(h.rooms, room)
+					r.unsubscribe <- room
 				}
 			}
 			count--
 			h.mtx.Unlock()
-			client.ws.Close()
+			client.conn.Close()
 		}
 		log.Println(count, "clients registered")
 	}
