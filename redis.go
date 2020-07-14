@@ -9,8 +9,8 @@ import (
 // RedisHub is ...
 type RedisHub struct {
 	psc         *redis.PubSubConn
-	subscribe   chan string // send to central redis psc to subscribe to channel
-	unsubscribe chan string // send to central redis psc to subscribe to channel
+	subscribe   chan string // send to central redis psc to sub or unsub to channel
+	unsubscribe chan string
 }
 
 func newRedisPool(host string) *redis.Pool {
@@ -19,7 +19,7 @@ func newRedisPool(host string) *redis.Pool {
 		Dial: func() (redis.Conn, error) {
 			conn, err := redis.DialURL(host)
 			if err != nil {
-				log.Printf("ERROR: fail initializing the redis pool: %s", err.Error())
+				log.Printf(err.Error())
 				panic("ERROR: failed to initialize Redis Pool")
 			}
 			return conn, err
@@ -54,7 +54,6 @@ func (r *RedisHub) subClient(ch chan *Message) {
 		defer r.psc.Close()
 		switch v := r.psc.Receive().(type) {
 		case redis.Message:
-			// log.Println(string(v.Data))
 			ch <- &Message{v.Channel, v.Data}
 		case redis.Subscription:
 			// https://godoc.org/github.com/garyburd/redigo/redis#Subscription
