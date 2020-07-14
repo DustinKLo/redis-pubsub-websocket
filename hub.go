@@ -2,22 +2,22 @@ package main
 
 import (
 	"log"
-
-	"github.com/gorilla/websocket"
 )
 
-type Client struct {
-	ws    *websocket.Conn
-	rooms []string
-}
-
+// Hub is ...
 type Hub struct {
 	register   chan *Client
 	unregister chan *Client
 	rooms      map[string]map[*Client]bool
 }
 
-func createHub() *Hub {
+// Message is ...
+type Message struct {
+	room    string
+	message []byte
+}
+
+func newHub() *Hub {
 	return &Hub{
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
@@ -25,26 +25,37 @@ func createHub() *Hub {
 	}
 }
 
-func (h *Hub) run() {
+func (h *Hub) run(r *RedisHub, ch chan *Message) {
 	for {
 		select {
-		case client := <-h.register:
-			log.Println("registered client: ", client)
-			for _, room := range client.rooms {
+		case c := <-h.register:
+			for _, room := range c.rooms {
 				if h.rooms[room] == nil {
 					h.rooms[room] = make(map[*Client]bool)
+					r.subscribe <- room
 				}
-				h.rooms[room][client] = true
+				h.rooms[room][c] = true
 			}
-		case client := <-h.unregister:
-			log.Println("un-registered client: ", client)
-			for _, room := range client.rooms {
-				delete(h.rooms[room], client)
-				if len(h.rooms[room]) == 0 {
+			log.Println("client registered", c.conn.RemoteAddr())
+
+		case c := <-h.unregister:
+			c.closeOnce.Do(func() {
+				close(c.send)
+			})
+			for _, room := range c.rooms {
+				delete(h.rooms[room], c)
+				if h.rooms[room] != nil && len(h.rooms[room]) == 0 {
 					delete(h.rooms, room)
+					r.unsubscribe <- room
 				}
 			}
-			client.ws.Close()
+			log.Println("client UN-registered", c.conn.RemoteAddr())
+
+		case msg := <-ch:
+			// log.Println(string(msg.message))
+			for c := range h.rooms[msg.room] {
+				c.send <- msg.message
+			}
 		}
 	}
 }

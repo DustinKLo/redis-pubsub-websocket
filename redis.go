@@ -6,22 +6,58 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-func redisConn(host string) redis.Conn {
-	c, err := redis.Dial("tcp", host)
-	if err != nil {
-		panic(err)
-	}
-	return c
+// RedisHub is ...
+type RedisHub struct {
+	psc         *redis.PubSubConn
+	subscribe   chan string // send to central redis psc to sub or unsub to channel
+	unsubscribe chan string
 }
 
-func subClient(psc redis.PubSubConn, ch chan *Message) {
+func newRedisPool(host string) *redis.Pool {
+	pool := &redis.Pool{
+		IdleTimeout: 0,
+		Dial: func() (redis.Conn, error) {
+			conn, err := redis.DialURL(host)
+			if err != nil {
+				log.Printf(err.Error())
+				panic("ERROR: failed to initialize Redis Pool")
+			}
+			return conn, err
+		},
+	}
+	return pool
+}
+
+func newRedisHub(conn *redis.Conn) *RedisHub {
+	return &RedisHub{
+		psc: &redis.PubSubConn{
+			Conn: *conn,
+		},
+		subscribe:   make(chan string),
+		unsubscribe: make(chan string),
+	}
+}
+
+func (r *RedisHub) subscribeHandler() {
 	for {
-		defer psc.Close()
-		switch v := psc.Receive().(type) {
+		select {
+		case channel := <-r.subscribe:
+			r.psc.Subscribe(channel)
+		case channel := <-r.unsubscribe:
+			r.psc.Unsubscribe(channel)
+		}
+	}
+}
+
+func (r *RedisHub) subClient(ch chan *Message) {
+	for {
+		defer r.psc.Close()
+		switch v := r.psc.Receive().(type) {
 		case redis.Message:
-			ch <- &Message{v.Channel, string(v.Data)}
+			ch <- &Message{v.Channel, v.Data}
 		case redis.Subscription:
-			// log.Printf("Subscribed to redis pub sub channel %s: %s %d\n", v.Channel, v.Kind, v.Count)
+			// https://godoc.org/github.com/garyburd/redigo/redis#Subscription
+			log.Println(v)
 		case error:
 			log.Printf("redis pubsub receive err: %v\n", v)
 			panic("Redis Sub connection broke")
