@@ -12,8 +12,11 @@ func broadcast(h *Hub, ch chan *Message) { // process data from redis pub sub
 
 		// send it out to every client in the room that is currently connected
 		h.mtx.Lock()
-		for client := range h.rooms[msg.room] {
-			client.send <- msg.message
+		for c := range h.rooms[msg.room] {
+			/*
+				panic: send on closed channel
+			*/
+			c.send <- msg.message
 		}
 		h.mtx.Unlock()
 	}

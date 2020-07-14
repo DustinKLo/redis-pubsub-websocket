@@ -8,9 +8,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// var writeDeadline = time.Now().Add(time.Millisecond * 150)
-var writeDeadline = time.Now().Add(time.Second * 10)
-
 // Client is ...
 type Client struct {
 	conn  *websocket.Conn
@@ -34,21 +31,18 @@ func (c *Client) writePump() {
 		select {
 		case msg, ok := <-c.send:
 			if !ok {
-				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
+			// writeWait := time.Now().Add(time.Second * 60)
+			writeWait := time.Now().Add(time.Millisecond * 100)
+			c.conn.SetWriteDeadline(writeWait)
 			// log.Println(string(msg))
-			// c.conn.SetWriteDeadline(writeDeadline)
 			err := c.conn.WriteMessage(websocket.TextMessage, []byte(msg))
 			if err != nil {
 				log.Println(err)
+				// c.hub.unregister <- c
+				// return
 			}
-			// w, err := c.conn.NextWriter(websocket.TextMessage)
-			// if err != nil {
-			// 	log.Println(err)
-			// }
-			// w.Write(msg)
 		}
 	}
 }
@@ -89,21 +83,21 @@ func (h *Hub) run(r *RedisHub, ch chan *Message) {
 	count := 0
 	for {
 		select {
-		case client := <-h.register:
+		case c := <-h.register:
 			h.mtx.Lock()
-			for _, room := range client.rooms {
+			for _, room := range c.rooms {
 				if h.rooms[room] == nil {
 					h.rooms[room] = make(map[*Client]bool)
 					r.subscribe <- room
 				}
-				h.rooms[room][client] = true
+				h.rooms[room][c] = true
 			}
 			count++
 			h.mtx.Unlock()
-		case client := <-h.unregister:
+		case c := <-h.unregister:
 			h.mtx.Lock()
-			for _, room := range client.rooms {
-				delete(h.rooms[room], client)
+			for _, room := range c.rooms {
+				delete(h.rooms[room], c)
 				if h.rooms[room] != nil && len(h.rooms[room]) == 0 {
 					delete(h.rooms, room)
 					r.unsubscribe <- room
@@ -111,7 +105,7 @@ func (h *Hub) run(r *RedisHub, ch chan *Message) {
 			}
 			count--
 			h.mtx.Unlock()
-			client.conn.Close()
+			c.conn.Close()
 		}
 		log.Println(count, "clients registered")
 	}
