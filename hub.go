@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"sync"
 )
 
 // Hub is ...
@@ -10,7 +9,6 @@ type Hub struct {
 	register   chan *Client
 	unregister chan *Client
 	rooms      map[string]map[*Client]bool
-	mtx        sync.Mutex
 }
 
 // Message is ...
@@ -24,7 +22,6 @@ func newHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		rooms:      make(map[string]map[*Client]bool),
-		mtx:        sync.Mutex{},
 	}
 }
 
