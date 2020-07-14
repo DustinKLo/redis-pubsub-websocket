@@ -22,9 +22,9 @@ func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	rooms := strings.Split(vars["rooms"], ",")
-	client := newClient(ws, h, rooms)
-	go client.readPump()
-	go client.writePump()
+	c := newClient(ws, h, rooms)
+	go c.readPump()
+	go c.writePump()
 }
 
 func main() {
@@ -38,7 +38,6 @@ func main() {
 
 	hub := newHub()
 	go hub.run(redisHub, msgCh)
-	go broadcast(hub, msgCh) // process data from redis pub sub
 
 	r := mux.NewRouter()
 	r.HandleFunc("/ws/{rooms}", func(w http.ResponseWriter, r *http.Request) {
