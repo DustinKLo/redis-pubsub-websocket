@@ -19,7 +19,7 @@ func newRedisPool(host string) *redis.Pool {
 		Dial: func() (redis.Conn, error) {
 			conn, err := redis.DialURL(host)
 			if err != nil {
-				log.Printf("ERROR: fail initializing the redis pool: %s", err.Error())
+				log.Printf(err.Error())
 				panic("ERROR: failed to initialize Redis Pool")
 			}
 			return conn, err

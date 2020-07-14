@@ -30,14 +30,14 @@ func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
 func main() {
 	msgCh := make(chan *Message) // go channel to hold all messages to broadcast
 
-	redisPool := newRedisPool("redis://127.0.0.1:6379")
-	redisConn := redisPool.Get()
-	redisHub := newRedisHub(&redisConn)
-	go redisHub.subscribeHandler()
-	go redisHub.subClient(msgCh)
+	rPool := newRedisPool("redis://127.0.0.1:6379")
+	rConn := rPool.Get()
+	rHub := newRedisHub(&rConn)
+	go rHub.subscribeHandler()
+	go rHub.subClient(msgCh)
 
 	hub := newHub()
-	go hub.run(redisHub, msgCh)
+	go hub.run(rHub, msgCh)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/ws/{rooms}", func(w http.ResponseWriter, r *http.Request) {
