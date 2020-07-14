@@ -1,4 +1,4 @@
-<h4>Infratructure diagram</h4>
+<h4>Dockerize application</h4>
 
 ```
 docker build -t redis-pubsub-websocket:latest .
