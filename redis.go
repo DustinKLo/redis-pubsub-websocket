@@ -2,69 +2,64 @@ package main
 
 import (
 	"log"
-	"sync"
 
 	"github.com/gomodule/redigo/redis"
 )
 
 // RedisHub is ...
 type RedisHub struct {
-	pool     *redis.Pool
-	channels map[string]*redis.PubSubConn // map to hold red.Pubsub types
-	// RedisHub has subclient goroutine method to create a new pub sub connnection to specified channel
-	mtx sync.Mutex
+	psc         *redis.PubSubConn
+	subscribe   chan string // send to central redis psc to sub or unsub to channel
+	unsubscribe chan string
 }
 
-func newRedisHub(host string) *RedisHub {
+func newRedisPool(host string) *redis.Pool {
 	pool := &redis.Pool{
 		IdleTimeout: 0,
 		Dial: func() (redis.Conn, error) {
-			conn, err := redis.Dial("tcp", host)
+			conn, err := redis.DialURL(host)
 			if err != nil {
-				log.Printf("ERROR: fail initializing the redis pool: %s", err.Error())
+				log.Printf(err.Error())
 				panic("ERROR: failed to initialize Redis Pool")
 			}
 			return conn, err
 		},
 	}
+	return pool
+}
 
+func newRedisHub(conn *redis.Conn) *RedisHub {
 	return &RedisHub{
-		pool:     pool,
-		channels: make(map[string]*redis.PubSubConn),
-		mtx:      sync.Mutex{},
+		psc: &redis.PubSubConn{
+			Conn: *conn,
+		},
+		subscribe:   make(chan string),
+		unsubscribe: make(chan string),
 	}
 }
 
-func (r *RedisHub) subClient(channel string, ch chan *Message) {
-	pool := r.pool.Get()
-	psc := redis.PubSubConn{Conn: pool}
-	psc.Subscribe(channel)
-
-	r.mtx.Lock()
-	r.channels[channel] = &psc
-	r.mtx.Unlock()
-
+func (r *RedisHub) subscribeHandler() {
 	for {
-		defer func() {
-			psc.Close()
-			pool.Close()
-		}()
-		switch v := psc.Receive().(type) {
+		select {
+		case channel := <-r.subscribe:
+			r.psc.Subscribe(channel)
+		case channel := <-r.unsubscribe:
+			r.psc.Unsubscribe(channel)
+		}
+	}
+}
+
+func (r *RedisHub) subClient(ch chan *Message) {
+	for {
+		defer r.psc.Close()
+		switch v := r.psc.Receive().(type) {
 		case redis.Message:
 			ch <- &Message{v.Channel, v.Data}
 		case redis.Subscription:
 			// https://godoc.org/github.com/garyburd/redigo/redis#Subscription
 			log.Println(v)
-			if v.Kind == "unsubscribe" || v.Kind == "punsubscribe" {
-				r.mtx.Lock()
-				delete(r.channels, channel)
-				r.mtx.Unlock()
-				psc.Close()
-				return
-			}
 		case error:
 			log.Printf("redis pubsub receive err: %v\n", v)
-			psc.Close()
 			panic("Redis Sub connection broke")
 		default:
 			log.Println("something else happened")
