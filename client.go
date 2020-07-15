@@ -37,8 +37,8 @@ func (c *Client) readPump() {
 
 	c.hub.register <- c
 
-	_, _, rErr := c.conn.ReadMessage() // detecting when client closes
-	if rErr != nil {
+	_, _, err := c.conn.ReadMessage() // detecting when client closes
+	if err != nil {
 		return
 	}
 }
