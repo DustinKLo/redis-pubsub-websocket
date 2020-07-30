@@ -21,5 +21,5 @@ ws.onclose = e => console.log(e);
 <h5>Sending message to Redis PubSub</h5>
 ```
 $ redis-cli
-> PUBLISH room1 "hello world room1!!"
+PUBLISH room1 "hello world room1!!"
 ```
