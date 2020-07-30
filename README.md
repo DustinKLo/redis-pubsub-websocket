@@ -10,6 +10,7 @@ docker run -p 8000:8000 redis-pubsub-websocket:latest
 ![diagram](redis-pubsub-websocket.png)
 
 <h3>Connecting to Websocket Server</h3>
+
 ```
 // specify which "rooms" you want to subscribe to as comma separated URL params
 
@@ -18,6 +19,7 @@ var ws = new Websocket("ws://localhost:8000/room1,room2,room3");
 ws.onmessage = e => console.log(e.data);
 ws.onclose = e => console.log(e);
 ```
+
 <h5>Sending message to Redis PubSub</h5>
 ```
 $ redis-cli
