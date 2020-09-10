@@ -1,28 +1,32 @@
-<h4>Dockerize application</h4>
+### Infratructure diagram
+![diagram](./img/redis-pubsub-websocket.png)
 
+### Running the websocket server
+###### Using Docker
 ```
-docker build -t redis-pubsub-websocket:latest .
-docker run -p 8000:8000 redis-pubsub-websocket:latest
+$ docker build -t redis-pubsub-websocket:latest .
+$ docker run -p 8000:8000 redis-pubsub-websocket:latest
+```
+###### Not using Docker
+```
+$ go run main.go redis.go hub.go client.go
 ```
 
-<h4>Infratructure diagram</h4>
-
-![diagram](redis-pubsub-websocket.png)
-
-<h3>Connecting to Websocket Server</h3>
-
+### Connecting to the websocket server with Javascript
 ```
 // specify which "rooms" you want to subscribe to as comma separated URL params
-
 // in your browser console
 var ws = new Websocket("ws://localhost:8000/room1,room2,room3");
 ws.onmessage = e => console.log(e.data);
 ws.onclose = e => console.log(e);
 ```
 
-<h5>Sending message to Redis PubSub</h5>
+### Testing Websocket server
+###### Go to `http://localhost:8000`
+![homepage](./img/websocket-test.png)
 
+###### Sending message to Redis PubSub
 ```
 $ redis-cli
-PUBLISH room1 "hello world room1!!"
+PUBLISH testroom "hello world room1!!"
 ```
