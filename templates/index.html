@@ -37,6 +37,7 @@
       wsForm.addEventListener("submit", onSubmit, false);
 
       var onSubmit = () => {
+        document.querySelector(".events").innerHTML = "";
         if (ws) {
           console.log(`closing previous Websocket connection: ${ws.url}`);
           ws.close();
