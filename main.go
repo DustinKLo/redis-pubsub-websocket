@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -27,6 +28,11 @@ func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
 	go c.writePump()
 }
 
+func renderHomePage(w http.ResponseWriter, r *http.Request) {
+	path, _ := os.Getwd()
+	http.ServeFile(w, r, path+"/templates/index.html")
+}
+
 func main() {
 	msgCh := make(chan *Message) // go channel to hold all messages to broadcast
 
@@ -40,6 +46,7 @@ func main() {
 	go hub.run(rHub, msgCh)
 
 	r := mux.NewRouter()
+	r.HandleFunc("/", renderHomePage)
 	r.HandleFunc("/ws/{rooms}", func(w http.ResponseWriter, r *http.Request) {
 		handleWS(hub, w, r)
 	})

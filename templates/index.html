@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    * {
+      font-family: sans-serif;
+    }
+
+    .page-wrapper {
+      padding: 15px;
+    }
+  </style>
+
+  <body>
+    <div class="page-wrapper">
+      <form id="ws-form" onsubmit="event.preventDefault(); onSubmit()">
+        <h1>
+          Put Redis Channel to subscribe to (comma separated for multiple
+          channels)
+        </h1>
+        <input id="channels" type="text" />
+        <button
+          id="subscribe-button"
+          onclick="event.preventDefault(); onSubmit()"
+        >
+          Subscribe
+        </button>
+      </form>
+
+      <h2 id="banner">Not Subscribed</h2>
+      <ul class="events"></ul>
+    </div>
+
+    <script>
+      var ws;
+
+      var wsForm = document.querySelector("#ws-form");
+      wsForm.addEventListener("submit", onSubmit, false);
+
+      var onSubmit = () => {
+        if (ws) {
+          console.log(`closing previous Websocket connection: ${ws.url}`);
+          ws.close();
+        }
+        var channels = document.querySelector("#channels").value;
+        if (channels) {
+          var banner = document.querySelector("#banner");
+          banner.innerHTML = `Subscribed to ${channels}!`;
+
+          ws = new WebSocket(`ws://localhost:8000/ws/${channels}`);
+          ws.onmessage = (e) => {
+            let ul = document.querySelector(".events");
+            let li = document.createElement("li");
+            let now = new Date();
+
+            let msg = `${now.toISOString()}: ${e.data}`;
+
+            li.appendChild(document.createTextNode(msg));
+            ul.appendChild(li);
+          };
+        }
+      };
+    </script>
+  </body>
+</html>
