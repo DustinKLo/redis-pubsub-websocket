@@ -29,6 +29,9 @@ func newClient(conn *websocket.Conn, h *Hub, rooms []string) *Client {
 	}
 }
 
+// TODO:
+// maybe use a context here and send a cancel signal to the parent function if anything errors out
+// the parent function will then unregister the user (through the channel)
 func (c *Client) readPump() {
 	defer func() {
 		c.conn.Close()
@@ -58,7 +61,8 @@ func (c *Client) writePump() { // writing messages to the websocket client
 			err := c.conn.WriteMessage(websocket.TextMessage, []byte(msg))
 			if err != nil {
 				log.Println(err)
-				c.conn.Close()
+				// c.conn.Close() // not sure if this is needed since we can use a return here instead
+				return
 			}
 		}
 	}

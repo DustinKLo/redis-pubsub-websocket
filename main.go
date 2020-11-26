@@ -21,6 +21,7 @@ func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 	rooms := strings.Split(vars["rooms"], ",")
 	c := newClient(ws, h, rooms)

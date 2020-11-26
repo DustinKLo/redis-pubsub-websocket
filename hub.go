@@ -25,6 +25,10 @@ func newHub() *Hub {
 	}
 }
 
+func (h *Hub) removeUser() {
+	// TODO: MAYBE(?) move user removal logic here
+}
+
 func (h *Hub) run(r *RedisHub, ch chan *Message) {
 	for {
 		select {
@@ -43,6 +47,7 @@ func (h *Hub) run(r *RedisHub, ch chan *Message) {
 				close(c.send)
 			})
 			for _, room := range c.rooms {
+				// maybe move the deletion of users in an outside re-usable function
 				delete(h.rooms[room], c)
 				if h.rooms[room] != nil && len(h.rooms[room]) == 0 {
 					delete(h.rooms, room)
@@ -55,6 +60,11 @@ func (h *Hub) run(r *RedisHub, ch chan *Message) {
 			// log.Println(string(msg.message))
 			for c := range h.rooms[msg.room] {
 				c.send <- msg.message
+				/*
+					TODO:
+					maybe wanna move the send messages here instead
+					if i "un-register" the client outside it would cause a lock
+				*/
 			}
 		}
 	}
