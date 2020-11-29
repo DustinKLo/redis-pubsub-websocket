@@ -53,10 +53,9 @@ PUBLISH testroom "hello world room1!!"
 
 ```bash
 $ docker build -t redis-pubsub-websocket:latest .
-$ docker run -p 8000:8000 redis-pubsub-websocket:latest
 ```
 
-##### Running container
+##### Running the container
 
 - Use `-redis redis://host.docker.internal:6379` to connect to your local machine's redis server
 
