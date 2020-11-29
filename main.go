@@ -1,10 +1,10 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -16,35 +16,30 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	rooms := strings.Split(vars["rooms"], ",")
-	c := newClient(ws, h, rooms)
-	go c.readPump()
-	go c.writePump()
-}
-
 func renderHomePage(w http.ResponseWriter, r *http.Request) {
 	path, _ := os.Getwd()
 	http.ServeFile(w, r, path+"/templates/index.html")
 }
 
+var (
+	debug bool
+)
+
 func main() {
-	msgCh := make(chan *Message) // go channel to hold all messages to broadcast
+	var (
+		redisHost string
+	)
 
-	rPool := newRedisPool("redis://127.0.0.1:6379")
-	rConn := rPool.Get()
-	rHub := newRedisHub(&rConn)
-	go rHub.subscribeHandler()
-	go rHub.subClient(msgCh)
+	flag.StringVar(&redisHost, "redis", "redis://127.0.0.1:6379", "redis endpoint (default: redis://127.0.0.1:6379)")
+	flag.BoolVar(&debug, "debug", false, "debug mode, stdout results")
+	flag.Parse()
 
-	hub := newHub()
-	go hub.run(rHub, msgCh)
+	redisPool := newRedisClient(redisHost)
+	psc := newPubsubClient(redisPool)
+
+	hub := newHub(psc)
+	go hub.redisListener()
+	go hub.run()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", renderHomePage)

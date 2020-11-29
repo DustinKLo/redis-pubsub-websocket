@@ -17,7 +17,7 @@
           Put Redis Channel to subscribe to (comma separated for multiple
           channels)
         </h1>
-        <input id="channels" type="text" />
+        <input id="channels" type="text" autofocus />
         <button
           id="subscribe-button"
           onclick="event.preventDefault(); onSubmit()"
@@ -31,9 +31,13 @@
     </div>
 
     <script>
+      var CHANNEL_STORAGE = "channel";
       var ws;
 
       var wsForm = document.querySelector("#ws-form");
+      var channelInput = document.querySelector("#channels");
+      channelInput.value = localStorage.getItem(CHANNEL_STORAGE) || "";
+
       wsForm.addEventListener("submit", onSubmit, false);
 
       var onSubmit = () => {
@@ -44,6 +48,7 @@
         }
         var channels = document.querySelector("#channels").value;
         if (channels) {
+          localStorage.setItem(CHANNEL_STORAGE, channels);
           var banner = document.querySelector("#banner");
           banner.innerHTML = `Subscribed to ${channels}!`;
 
@@ -57,6 +62,8 @@
 
             li.appendChild(document.createTextNode(msg));
             ul.appendChild(li);
+
+            window.scrollTo(0, document.body.scrollHeight);
           };
         }
       };
