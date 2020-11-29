@@ -8,6 +8,14 @@
     .page-wrapper {
       padding: 15px;
     }
+
+    .clear-button {
+      position: fixed;
+      right: 15px;
+      top: 15px;
+      font-size: 25px;
+      opacity: 0.75;
+    }
   </style>
 
   <body>
@@ -28,6 +36,7 @@
 
       <h2 id="banner">Not Subscribed</h2>
       <ul class="events"></ul>
+      <button class="clear-button" onclick="clearData()">Clear</button>
     </div>
 
     <script>
@@ -39,6 +48,10 @@
       channelInput.value = localStorage.getItem(CHANNEL_STORAGE) || "";
 
       wsForm.addEventListener("submit", onSubmit, false);
+
+      var clearData = () => {
+        document.querySelector(".events").innerHTML = "";
+      };
 
       var onSubmit = () => {
         document.querySelector(".events").innerHTML = "";
