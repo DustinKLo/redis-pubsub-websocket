@@ -16,12 +16,11 @@ const (
 
 // Hub is ...
 type Hub struct {
-	register    chan *Client
-	unregister  chan *Client
-	broadcast   chan *Message
-	rooms       map[string]map[*Client]bool
-	redisClient *redis.Pool
-	psc         *redis.PubSubConn
+	register   chan *Client
+	unregister chan *Client
+	broadcast  chan *Message
+	rooms      map[string]map[*Client]bool
+	psc        *redis.PubSubConn
 }
 
 // Message is ...
