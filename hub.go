@@ -91,6 +91,8 @@ func (h *Hub) registerUser(c *Client) {
 }
 
 func (h *Hub) unregisterUser(c *Client) {
+	defer c.conn.Close()
+
 	for _, room := range c.rooms {
 		delete(h.rooms[room], c)
 		if h.rooms[room] != nil && len(h.rooms[room]) == 0 {
@@ -102,7 +104,6 @@ func (h *Hub) unregisterUser(c *Client) {
 		}
 	}
 	log.Println("client UN-registered", c.conn.RemoteAddr())
-	c.conn.Close()
 }
 
 func (h *Hub) run() { //(ch chan *Message) {
