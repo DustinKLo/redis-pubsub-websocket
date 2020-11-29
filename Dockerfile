@@ -1,4 +1,4 @@
-  
+
 FROM golang:1.14 as builder
 
 WORKDIR /app
@@ -15,4 +15,5 @@ COPY --from=builder /app/redis-pubsub-websocket /redis-pubsub-websocket
 
 EXPOSE 8000
 
-CMD ["/redis-pubsub-websocket"]
+ENTRYPOINT ["/redis-pubsub-websocket"]
+CMD ["-h"]
