@@ -34,7 +34,7 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "debug mode, stdout results")
 	flag.Parse()
 
-	redisPool := newRedisClient(redisHost)
+	redisPool := newRedisPool(redisHost)
 	psc := newPubsubClient(redisPool)
 
 	hub := newHub(psc)

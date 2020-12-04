@@ -6,8 +6,8 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-func newRedisClient(host string) *redis.Pool {
-	redisPool := &redis.Pool{
+func newRedisPool(host string) *redis.Pool {
+	return &redis.Pool{
 		IdleTimeout: 0,
 		Dial: func() (redis.Conn, error) {
 			conn, err := redis.DialURL(host)
@@ -18,7 +18,6 @@ func newRedisClient(host string) *redis.Pool {
 			return conn, err
 		},
 	}
-	return redisPool
 }
 
 func newPubsubClient(pool *redis.Pool) *redis.PubSubConn {
