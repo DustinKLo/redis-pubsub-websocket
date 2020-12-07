@@ -53,8 +53,7 @@ func main() {
 	})
 
 	logger.Infoln("http server started on :8000") // starting server
-	err := http.ListenAndServe(":8000", r)
-	if err != nil {
+	if err := http.ListenAndServe(":8000", r); err != nil {
 		logger.Fatalln("ListAndServe: ", err)
 	}
 }

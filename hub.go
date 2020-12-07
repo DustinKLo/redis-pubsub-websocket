@@ -115,8 +115,7 @@ func (h *Hub) run() { //(ch chan *Message) {
 			for c := range h.rooms[msg.room] {
 				c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 
-				err := c.conn.WriteMessage(websocket.TextMessage, []byte(msg.message))
-				if err != nil {
+				if err := c.conn.WriteMessage(websocket.TextMessage, []byte(msg.message)); err != nil {
 					logger.Warningln("Sent message err: ", err)
 					h.unregisterUser(c)
 				}

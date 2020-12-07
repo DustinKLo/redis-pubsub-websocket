@@ -35,8 +35,7 @@ func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
 
 	h.register <- c
 
-	_, _, err = c.conn.ReadMessage() // detecting when client closes
-	if err != nil {
+	if _, _, err = c.conn.ReadMessage(); err != nil { // detecting when client closes
 		logger.Infoln("Client closed: ", c.conn.RemoteAddr(), err.Error())
 		c.hub.unregister <- c
 		return
