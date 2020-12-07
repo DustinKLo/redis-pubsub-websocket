@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gomodule/redigo/redis"
 )
 
@@ -12,7 +10,7 @@ func newRedisPool(host string) *redis.Pool {
 		Dial: func() (redis.Conn, error) {
 			conn, err := redis.DialURL(host)
 			if err != nil {
-				log.Printf(err.Error())
+				logger.Panicln(err.Error())
 				panic("ERROR: failed to initialize Redis Pool")
 			}
 			return conn, err

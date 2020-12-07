@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"sort"
 	"time"
 
@@ -45,22 +43,22 @@ func (h *Hub) redisListener() { //(ch chan *Message) {
 		switch v := h.psc.Receive().(type) {
 		case redis.Message:
 			if debug == true {
-				log.Println(string(v.Data))
+				logger.Debugln(string(v.Data))
 			}
 			h.broadcast <- &Message{v.Channel, v.Data}
 		case redis.Subscription: // https://godoc.org/github.com/garyburd/redigo/redis#Subscription
-			log.Println(v)
+			logger.Infof("redis: %s to %s\n", v.Kind, v.Channel)
 		case error:
-			log.Printf("redis pubsub receive err: %v\n", v)
+			logger.Panicf("redis err: %v\n", v)
 			panic("Redis connection broke")
 		default:
-			log.Println("something else happened")
+			logger.Warningln("redis: something else happened")
 		}
 	}
 }
 
 func (h *Hub) printRoomsSize() {
-	fmt.Println("####################################")
+	logger.Debugln("####################################")
 	keys := make([]string, 0)
 	for k := range h.rooms {
 		keys = append(keys, k)
@@ -68,12 +66,12 @@ func (h *Hub) printRoomsSize() {
 	if len(keys) > 0 {
 		sort.Strings(keys)
 		for _, k := range keys {
-			fmt.Println(k, len(h.rooms[k]))
+			logger.Debugln(k, len(h.rooms[k]))
 		}
 	} else {
-		fmt.Println("NO MORE CLIENTS IN H.ROOMS")
+		logger.Debugln("NO MORE CLIENTS IN H.ROOMS")
 	}
-	fmt.Println("####################################")
+	logger.Debugln("####################################")
 }
 
 func (h *Hub) registerUser(c *Client) {
@@ -84,7 +82,7 @@ func (h *Hub) registerUser(c *Client) {
 		}
 		h.rooms[room][c] = true
 	}
-	log.Println("client registered", c.conn.RemoteAddr())
+	logger.Infoln("client registered", c.conn.RemoteAddr())
 	if debug == true {
 		h.printRoomsSize()
 	}
@@ -103,7 +101,7 @@ func (h *Hub) unregisterUser(c *Client) {
 			h.printRoomsSize()
 		}
 	}
-	log.Println("client UN-registered", c.conn.RemoteAddr())
+	logger.Infoln("client UN-registered", c.conn.RemoteAddr())
 }
 
 func (h *Hub) run() { //(ch chan *Message) {
@@ -117,9 +115,8 @@ func (h *Hub) run() { //(ch chan *Message) {
 			for c := range h.rooms[msg.room] {
 				c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 
-				err := c.conn.WriteMessage(websocket.TextMessage, []byte(msg.message))
-				if err != nil {
-					log.Println("Sent message err: ", err)
+				if err := c.conn.WriteMessage(websocket.TextMessage, []byte(msg.message)); err != nil {
+					logger.Warningln("Sent message err: ", err)
 					h.unregisterUser(c)
 				}
 			}

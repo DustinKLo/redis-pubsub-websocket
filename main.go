@@ -2,23 +2,25 @@ package main
 
 import (
 	"flag"
-	"log"
+	"fmt"
 	"net/http"
 	"os"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
+func renderHomePage(w http.ResponseWriter, r *http.Request) {
+	path, _ := os.Getwd()
+	http.ServeFile(w, r, path+"/templates/index.html")
+}
+
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // CORS?
 	},
-}
-
-func renderHomePage(w http.ResponseWriter, r *http.Request) {
-	path, _ := os.Getwd()
-	http.ServeFile(w, r, path+"/templates/index.html")
 }
 
 var (
@@ -27,12 +29,18 @@ var (
 
 func main() {
 	var (
+		port      int
 		redisHost string
 	)
 
-	flag.StringVar(&redisHost, "redis", "redis://127.0.0.1:6379", "redis endpoint (default: redis://127.0.0.1:6379)")
+	flag.IntVar(&port, "port", 8000, "service's port number")
+	flag.StringVar(&redisHost, "redis", "redis://127.0.0.1:6379", "redis endpoint")
 	flag.BoolVar(&debug, "debug", false, "debug mode, stdout results")
 	flag.Parse()
+
+	if debug == true {
+		logger.SetLevel(logrus.DebugLevel)
+	}
 
 	redisPool := newRedisPool(redisHost)
 	psc := newPubsubClient(redisPool)
@@ -47,9 +55,8 @@ func main() {
 		handleWS(hub, w, r)
 	})
 
-	log.Println("http server started on :8000") // starting server
-	err := http.ListenAndServe(":8000", r)
-	if err != nil {
-		log.Fatal("ListAndServe: ", err)
+	logger.Infoln(fmt.Sprintf("http server started on :%d", port)) // starting server
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), r); err != nil {
+		logger.Fatalln("ListAndServe: ", err)
 	}
 }
