@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -28,9 +29,11 @@ var (
 
 func main() {
 	var (
+		port      int
 		redisHost string
 	)
 
+	flag.IntVar(&port, "port", 8000, "service's port number")
 	flag.StringVar(&redisHost, "redis", "redis://127.0.0.1:6379", "redis endpoint")
 	flag.BoolVar(&debug, "debug", false, "debug mode, stdout results")
 	flag.Parse()
@@ -52,8 +55,8 @@ func main() {
 		handleWS(hub, w, r)
 	})
 
-	logger.Infoln("http server started on :8000") // starting server
-	if err := http.ListenAndServe(":8000", r); err != nil {
+	logger.Infoln(fmt.Sprintf("http server started on :%d", port)) // starting server
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), r); err != nil {
 		logger.Fatalln("ListAndServe: ", err)
 	}
 }
