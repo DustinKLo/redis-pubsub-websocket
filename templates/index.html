@@ -65,7 +65,8 @@
           var banner = document.querySelector("#banner");
           banner.innerHTML = `Subscribed to ${channels}!`;
 
-          ws = new WebSocket(`ws://localhost:8000/ws/${channels}`);
+          var wsHost = "ws://localhost:" + "{{.Port}}" + `/ws/${channels}`;
+          ws = new WebSocket(wsHost);
           ws.onmessage = (e) => {
             let ul = document.querySelector(".events");
             let li = document.createElement("li");

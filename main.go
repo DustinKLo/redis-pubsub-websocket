@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 
@@ -11,11 +12,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
-
-func renderHomePage(w http.ResponseWriter, r *http.Request) {
-	path, _ := os.Getwd()
-	http.ServeFile(w, r, path+"/templates/index.html")
-}
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -50,7 +46,15 @@ func main() {
 	go hub.run()
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", renderHomePage)
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		path, _ := os.Getwd()
+		tmpl, _ := template.ParseFiles(path + "/templates/index.html")
+		data := map[string]interface{}{"Port": port}
+		if err := tmpl.Execute(w, data); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+	})
 	r.HandleFunc("/ws/{rooms}", func(w http.ResponseWriter, r *http.Request) {
 		handleWS(hub, w, r)
 	})

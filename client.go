@@ -27,7 +27,7 @@ func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		logger.Fatalln("handleWS err: ", err)
+		logger.Errorln("handleWS err: ", err)
 		return
 	}
 	rooms := strings.Split(vars["rooms"], ",")
@@ -35,7 +35,7 @@ func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
 
 	h.register <- c
 
-	if _, _, err = c.conn.ReadMessage(); err != nil { // detecting when client closes
+	if _, _, err := c.conn.ReadMessage(); err != nil { // detecting when client closes
 		logger.Infoln("Client closed: ", c.conn.RemoteAddr(), err.Error())
 		c.hub.unregister <- c
 		return
