@@ -28,7 +28,7 @@ func main() {
 		redisHost string
 	)
 
-	flag.IntVar(&port, "port", 8000, "service's port number")
+	flag.IntVar(&port, "port", 8000, "server port number")
 	flag.StringVar(&redisHost, "redis", "redis://127.0.0.1:6379", "redis endpoint")
 	flag.BoolVar(&debug, "debug", false, "debug mode, stdout results")
 	flag.Parse()

@@ -20,6 +20,8 @@ $ ./redis-pubsub-websocket --help
 Usage of ./redis-pubsub-websocket:
   -debug
       debug mode, stdout results
+  -port int
+      server port number (default 8000)
   -redis string
       redis endpoint (default: redis://127.0.0.1:6379) (default "redis://127.0.0.1:6379")
 ```
@@ -29,7 +31,7 @@ Usage of ./redis-pubsub-websocket:
 ```javascript
 // specify which "rooms" you want to subscribe to as comma separated URL params
 // in your browser console
-var ws = new Websocket("ws://localhost:8000/room1,room2,room3");
+var ws = new Websocket("ws://localhost:8000/ws/room1,room2,room3");
 ws.onmessage = (e) => console.log(e.data);
 ws.onclose = (e) => console.log(e);
 ```
