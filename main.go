@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"os"
 
 	"github.com/sirupsen/logrus"
 
@@ -47,8 +46,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		path, _ := os.Getwd()
-		tmpl, _ := template.ParseFiles(path + "/templates/index.html")
+		tmpl, _ := template.ParseFiles("templates/index.html")
 		data := map[string]interface{}{"Port": port}
 		if err := tmpl.Execute(w, data); err != nil {
 			http.Error(w, err.Error(), 500)
