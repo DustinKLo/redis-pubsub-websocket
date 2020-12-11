@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"html/template"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -46,12 +45,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		tmpl, _ := template.ParseFiles("templates/index.html")
-		data := map[string]interface{}{"Port": port}
-		if err := tmpl.Execute(w, data); err != nil {
-			http.Error(w, err.Error(), 500)
-			return
-		}
+		http.ServeFile(w, r, "templates/index.html")
 	})
 	r.HandleFunc("/ws/{rooms}", func(w http.ResponseWriter, r *http.Request) {
 		handleWS(hub, w, r)
