@@ -97,9 +97,9 @@ func (h *Hub) unregisterUser(c *Client) {
 			delete(h.rooms, room)
 			h.psc.Unsubscribe(room)
 		}
-		if debug == true {
-			h.printRoomsSize()
-		}
+	}
+	if debug == true {
+		h.printRoomsSize()
 	}
 	logger.Infoln("client UN-registered", c.conn.RemoteAddr())
 }
