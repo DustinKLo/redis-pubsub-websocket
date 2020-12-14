@@ -11,14 +11,12 @@ import (
 // Client is ...
 type Client struct {
 	conn  *websocket.Conn
-	hub   *Hub
 	rooms []string
 }
 
 func newClient(conn *websocket.Conn, h *Hub, rooms []string) *Client {
 	return &Client{
 		conn:  conn,
-		hub:   h,
 		rooms: rooms,
 	}
 }
@@ -37,7 +35,7 @@ func handleWS(h *Hub, w http.ResponseWriter, r *http.Request) {
 
 	if _, _, err := c.conn.ReadMessage(); err != nil { // detecting when client closes
 		logger.Infoln("Client closed: ", c.conn.RemoteAddr(), err.Error())
-		c.hub.unregister <- c
+		h.unregister <- c
 		return
 	}
 }
